@@ -1,0 +1,1 @@
+echo ping | nc server:12345

@@ -37,3 +37,8 @@ docker-compose-down:
 docker-compose-logs:
 	docker-compose -f docker-compose-dev.yaml logs -f
 .PHONY: docker-compose-logs
+
+server-ping: 
+	docker build -t netcat ./test
+	sudo docker run -i --rm --network=7574-sistemas-distribuidos-tp0_testing_net netcat ./ping.sh
+.PHONY: server-ping
