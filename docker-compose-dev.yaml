@@ -9,6 +9,8 @@ services:
       - SERVER_PORT=12345
       - SERVER_LISTEN_BACKLOG=7
       - LOGGING_LEVEL=DEBUG
+    volumes: 
+      - ./config/config.ini:/build/config.ini
     networks:
       - testing_net
 
@@ -23,6 +25,8 @@ services:
       - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
+    volumes: 
+      - ./config/config.yaml:/config.yaml
     depends_on:
       - server
 
