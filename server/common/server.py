@@ -1,5 +1,7 @@
 import socket
 import logging
+import signal
+import sys
 
 
 class Server:
@@ -8,6 +10,8 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self._running = True
+        self._client_socket = None
 
     def run(self):
         """
@@ -20,11 +24,23 @@ class Server:
 
         # TODO: Modify this program to handle signal to graceful shutdown
         # the server
-        while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
 
-    def __handle_client_connection(self, client_sock):
+        signal.signal(signal.SIGTERM, self.__handle_sigterm)
+
+        while self._running:
+            self.__accept_new_connection()
+            if (self._client_socket is not None):
+                self.__handle_client_connection()
+
+        logging.info("Ending Program")
+    
+    def __handle_sigterm(self, signum, frame):
+        logging.info('Handling SIGTERM')
+        self._running = False
+        logging.info('Closing Server Socket')
+        self._server_socket.close()
+
+    def __handle_client_connection(self):
         """
         Read message from a specific client socket and closes the socket
 
@@ -32,15 +48,17 @@ class Server:
         client socket will also be closed
         """
         try:
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
+            msg = self._client_socket.recv(1024).rstrip().decode('utf-8')
             logging.info(
                 'Message received from connection {}. Msg: {}'
-                .format(client_sock.getpeername(), msg))
-            client_sock.send("Your Message has been received: {}\n".format(msg).encode('utf-8'))
+                .format(self._client_socket.getpeername(), msg))
+            self._client_socket.send("Your Message has been received: {}\n".format(msg).encode('utf-8'))
         except OSError:
-            logging.info("Error while reading socket {}".format(client_sock))
+            if self._running:
+                logging.info("Error while reading socket {}".format(self._client_socket))
         finally:
-            client_sock.close()
+            logging.info('Closing Client Socket')
+            self._client_socket.close()
 
     def __accept_new_connection(self):
         """
@@ -51,7 +69,11 @@ class Server:
         """
 
         # Connection arrived
-        logging.info("Proceed to accept new connections")
-        c, addr = self._server_socket.accept()
-        logging.info('Got connection from {}'.format(addr))
-        return c
+        try: 
+            logging.info("Proceed to accept new connections")
+            self._client_socket = None
+            self._client_socket, addr = self._server_socket.accept()
+            logging.info('Got connection from {}'.format(addr))
+        except OSError:
+            if self._running:
+                logging.info("Error while accepting connection")
