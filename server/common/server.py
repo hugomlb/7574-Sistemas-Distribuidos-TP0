@@ -7,6 +7,7 @@ import sys
 class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
+        signal.signal(signal.SIGTERM, self.__handle_sigterm)
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
@@ -25,8 +26,6 @@ class Server:
         # TODO: Modify this program to handle signal to graceful shutdown
         # the server
 
-        signal.signal(signal.SIGTERM, self.__handle_sigterm)
-
         while self._running:
             self.__accept_new_connection()
             if (self._client_socket is not None):
@@ -39,6 +38,7 @@ class Server:
         self._running = False
         logging.info('Closing Server Socket')
         self._server_socket.close()
+        self._close_client_socket()
 
     def __handle_client_connection(self):
         """
@@ -57,8 +57,13 @@ class Server:
             if self._running:
                 logging.info("Error while reading socket {}".format(self._client_socket))
         finally:
+            self._close_client_socket()
+
+    def _close_client_socket(self):
+        if (self._client_socket is not None):
             logging.info('Closing Client Socket')
             self._client_socket.close()
+            self._client_socket = None
 
     def __accept_new_connection(self):
         """
