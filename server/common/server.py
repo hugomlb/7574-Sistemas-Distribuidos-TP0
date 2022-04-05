@@ -52,7 +52,7 @@ class Server:
             logging.info(
                 'Message received from connection {}. Msg: {}'
                 .format(self._client_socket.getpeername(), msg))
-            self._client_socket.send("Your Message has been received: {}\n".format(msg).encode('utf-8'))
+            self._client_socket.sendall("Your Message has been received: {}\n".format(msg).encode('utf-8'))
         except OSError:
             if self._running:
                 logging.info("Error while reading socket {}".format(self._client_socket))
