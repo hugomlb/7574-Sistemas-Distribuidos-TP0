@@ -3,7 +3,6 @@ import logging
 import signal
 import sys
 from multiprocessing import Pool
-
 from common.clientHandler import ClientHandler
 
 
@@ -15,7 +14,6 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self._running = True
-        self._client_socket = None
 
     def run(self):
         """
@@ -31,9 +29,7 @@ class Server:
         processPool = Pool()
         while self._running:
             client_sock = self.__accept_new_connection()
-            processPool.apply_async(ClientHandler.run, args=(ClientHandler, client_sock), 
-            callback=logging.info,error_callback= logging.info
-            )
+            processPool.apply_async(ClientHandler.run, args=(ClientHandler, client_sock))
 
         processPool.close()
         processPool.join()

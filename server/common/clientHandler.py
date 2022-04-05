@@ -1,3 +1,4 @@
+import socket
 import logging
 import os
 
@@ -17,8 +18,7 @@ class ClientHandler:
               logging.info(
                   'Message received from connection {} in process {}. Msg: {}'
                   .format(client_sock.getpeername(), os.getpid(), msg))
-              #TODO: poner un for para saber cuanto falta enviar
-              client_sock.send("Your Message has been received: {}\n".format(msg).encode('utf-8'))
+              client_sock.sendall("Your Message has been received: {}\n".format(msg).encode('utf-8'))
           except OSError:
               logging.info("Error while reading socket {}".format(client_sock))
           finally:
